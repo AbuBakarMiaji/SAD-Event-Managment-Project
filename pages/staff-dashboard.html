@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Staff Dashboard - EventPro</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+<nav class="navbar">
+  <div style="display:flex;align-items:center;gap:12px;">
+    <button id="sidebar-toggle" style="background:none;border:none;cursor:pointer;padding:4px;">
+      <svg width="22" height="22" fill="none" stroke="var(--gray)" stroke-width="2" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+    </button>
+    <a class="navbar-brand text-[#ffa115] " href="">
+     PLANPro
+    </a>
+  </div>
+  <div class="nav-user">
+    <span id="nav-username" style="font-size:14px;font-weight:600;color:var(--gray);"></span>
+    <div class="avatar" style="background:linear-gradient(135deg,#F59E0B,#D97706);" id="nav-avatar">S</div>
+    <a href="../php/logout.php" class="btn btn-outline btn-sm">Logout</a>
+  </div>
+</nav>
+
+<aside class="sidebar">
+  <div class="sidebar-section">
+    <div class="sidebar-title">Menu</div>
+    <a class="sidebar-link active" onclick="showSection('dashboard')">Dashboard</a>
+    <a class="sidebar-link" onclick="showSection('tasks')"> My Tasks</a>
+    <a class="sidebar-link" onclick="showSection('events')"> Event Details</a>
+  </div>
+  <div class="sidebar-section">
+    <a href="../php/logout.php" class="sidebar-link" style="color:var(--danger)"> Logout</a>
+  </div>
+</aside>
+
+<main class="main-content">
+
+  <!-- Dashboard -->
+  <div id="section-dashboard">
+    <div style="background:linear-gradient(135deg,#F59E0B,#D97706);border-radius:20px;padding:28px;color:white;margin-bottom:24px;">
+      <h1 style="font-size:22px;font-weight:700;margin-bottom:6px;">Welcome, <span id="welcome-name">Staff</span>! </h1>
+      <p style="opacity:0.9;font-size:14px;">Here's an overview of your assigned tasks and events.</p>
+    </div>
+    <div class="grid-stats" id="staff-stats">
+      <div class="stat-card"><div class="stat-icon" style="background:#FEF3C7;">📋</div><div class="stat-value" id="s-total">-</div><div class="stat-label">Total Tasks</div></div>
+      <div class="stat-card"><div class="stat-icon" style="background:#DBEAFE;">🔄</div><div class="stat-value" id="s-progress">-</div><div class="stat-label">In Progress</div></div>
+      <div class="stat-card"><div class="stat-icon" style="background:#D1FAE5;">✅</div><div class="stat-value" id="s-done">-</div><div class="stat-label">Completed</div></div>
+      <div class="stat-card"><div class="stat-icon" style="background:#FEE2E2;">⏳</div><div class="stat-value" id="s-pending">-</div><div class="stat-label">Pending</div></div>
+    </div>
+
+    <!-- Today's Tasks -->
+    <div class="card" style="padding:24px;margin-top:8px;">
+      <h3 style="font-weight:700;margin-bottom:16px;">Today's & Upcoming Tasks</h3>
+      <div id="today-tasks"><div class="spinner"></div></div>
+    </div>
+  </div>
+
+  <!-- My Tasks -->
+  <div id="section-tasks" style="display:none;">
+    <div class="page-header"><h1 class="page-title">My Tasks</h1><p class="page-subtitle">View and update your assigned tasks</p></div>
+    <div style="display:flex;gap:8px;margin-bottom:16px;">
+      <button class="btn btn-sm btn-primary" onclick="filterTasks('all')">All</button>
+      <button class="btn btn-sm btn-outline" onclick="filterTasks('pending')">Pending</button>
+      <button class="btn btn-sm btn-outline" onclick="filterTasks('in_progress')">In Progress</button>
+      <button class="btn btn-sm btn-outline" onclick="filterTasks('completed')">Completed</button>
+    </div>
+    <div id="tasks-grid"><div class="spinner"></div></div>
+  </div>
+
+  <!-- Event Details -->
+  <div id="section-events" style="display:none;">
+    <div class="page-header"><h1 class="page-title">Event Details</h1><p class="page-subtitle">Events you are working on</p></div>
+    <div id="events-list"><div class="spinner"></div></div>
+  </div>
+
+</main>
+
+<!-- Task Update Modal -->
+<div class="modal-overlay" id="task-update-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 class="modal-title">Update Task Status</h2>
+      <button class="modal-close" onclick="closeModal('task-update-modal')">✕</button>
+    </div>
+    <input type="hidden" id="tu-id">
+    <div style="background:var(--bg);border-radius:10px;padding:14px;margin-bottom:16px;">
+      <h3 id="tu-title" style="font-size:15px;font-weight:700;"></h3>
+      <p id="tu-desc" style="font-size:13px;color:var(--gray);margin-top:4px;"></p>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Update Status</label>
+      <select id="tu-status" class="form-control">
+        <option value="pending">Pending</option>
+        <option value="in_progress">In Progress</option>
+        <option value="completed">Completed</option>
+      </select>
+    </div>
+    <button class="btn btn-primary" style="width:100%;" onclick="updateTaskStatus()">Update Status</button>
+  </div>
+</div>
+
+<script src="../js/main.js"></script>
+<script>
+let allTasks = [];
+
+(async () => {
+    const user = await checkAuth('staff');
+    document.getElementById('nav-username').textContent = user.name;
+    document.getElementById('nav-avatar').textContent = user.name[0].toUpperCase();
+    document.getElementById('welcome-name').textContent = user.name.split(' ')[0];
+    loadDashboard();
+})();
+
+function showSection(name) {
+    document.querySelectorAll('[id^="section-"]').forEach(s => s.style.display = 'none');
+    document.getElementById('section-' + name).style.display = 'block';
+    document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
+    const loaders = { tasks: loadTasksSection, events: loadEventsSection };
+    loaders[name]?.();
+}
+
+async function loadDashboard() {
+    const res = await API.get('tasks.php', { action: 'list' });
+    allTasks = res.data || [];
+
+    document.getElementById('s-total').textContent = allTasks.length;
+    document.getElementById('s-progress').textContent = allTasks.filter(t => t.status === 'in_progress').length;
+    document.getElementById('s-done').textContent = allTasks.filter(t => t.status === 'completed').length;
+    document.getElementById('s-pending').textContent = allTasks.filter(t => t.status === 'pending').length;
+
+    const upcoming = allTasks.filter(t => t.status !== 'completed').slice(0, 5);
+    const serviceEmoji = { catering:'🍽️', decoration:'🎨', venue_setup:'🏛️', photography:'📷', music:'🎵', other:'🔧' };
+
+    document.getElementById('today-tasks').innerHTML = upcoming.length ? upcoming.map(t => `
+      <div style="border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;">
+        <div style="display:flex;gap:14px;align-items:center;">
+          <div style="font-size:28px;">${serviceEmoji[t.service_type] || '🔧'}</div>
+          <div>
+            <h4 style="font-weight:700;font-size:14px;margin-bottom:3px;">${t.title}</h4>
+            <p style="font-size:12px;color:var(--gray);">📦 ${t.package_name} · 📅 ${formatDate(t.event_date)}</p>
+            ${t.due_date ? `<p style="font-size:12px;color:var(--danger);">⏰ Due: ${formatDate(t.due_date)}</p>` : ''}
+          </div>
+        </div>
+        <div style="text-align:right;">
+          ${formatTaskStatus(t.status)}
+          <br>
+          <button class="btn btn-sm btn-outline" style="margin-top:8px;" onclick="openTaskUpdate(${JSON.stringify(t).replace(/"/g,'&quot;')})">Update</button>
+        </div>
+      </div>`).join('') :
+      `<div class="empty-state"><div class="empty-state-icon">🎉</div><p class="empty-state-text">No pending tasks! All caught up.</p></div>`;
+}
+
+async function loadTasksSection() {
+    const res = await API.get('tasks.php', { action: 'list' });
+    allTasks = res.data || [];
+    renderTasks(allTasks);
+}
+
+function filterTasks(status) {
+    const filtered = status === 'all' ? allTasks : allTasks.filter(t => t.status === status);
+    renderTasks(filtered);
+}
+
+function renderTasks(tasks) {
+    const serviceEmoji = { catering:'🍽️', decoration:'🎨', venue_setup:'🏛️', photography:'📷', music:'🎵', other:'🔧' };
+    document.getElementById('tasks-grid').innerHTML = tasks.length ? tasks.map(t => `
+      <div class="card" style="padding:20px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:flex-start;gap:12px;">
+        <div style="display:flex;gap:14px;align-items:flex-start;">
+          <div style="font-size:32px;flex-shrink:0;">${serviceEmoji[t.service_type] || '🔧'}</div>
+          <div>
+            <h4 style="font-weight:700;margin-bottom:5px;">${t.title}</h4>
+            <p style="font-size:13px;color:var(--gray);margin-bottom:6px;">${t.description || 'No description'}</p>
+            <p style="font-size:12px;color:var(--gray);">📦 ${t.package_name} · 👤 ${t.customer_name}</p>
+            <p style="font-size:12px;color:var(--gray);">📅 Event: ${formatDate(t.event_date)}</p>
+            ${t.due_date ? `<p style="font-size:12px;color:var(--danger);font-weight:600;">⏰ Due: ${formatDate(t.due_date)}</p>` : ''}
+          </div>
+        </div>
+        <div style="text-align:right;flex-shrink:0;">
+          ${formatTaskStatus(t.status)}
+          <br>
+          <button class="btn btn-sm btn-outline" style="margin-top:8px;" onclick="openTaskUpdate(${JSON.stringify(t).replace(/"/g,'&quot;')})">Update</button>
+        </div>
+      </div>`).join('') :
+      `<div class="empty-state"><div class="empty-state-icon">✅</div><p class="empty-state-text">No tasks found</p></div>`;
+}
+
+async function loadEventsSection() {
+    const res = await API.get('tasks.php', { action: 'list' });
+    // Group by event
+    const eventMap = {};
+    (res.data || []).forEach(t => {
+        const key = t.booking_id;
+        if (!eventMap[key]) eventMap[key] = { package_name: t.package_name, customer_name: t.customer_name, event_date: t.event_date, tasks: [] };
+        eventMap[key].tasks.push(t);
+    });
+
+    document.getElementById('events-list').innerHTML = Object.values(eventMap).length ? Object.values(eventMap).map(ev => `
+      <div class="card" style="padding:24px;margin-bottom:16px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+          <div>
+            <h3 style="font-weight:700;font-size:17px;">${ev.package_name}</h3>
+            <p style="font-size:13px;color:var(--gray);">👤 ${ev.customer_name} · 📅 ${formatDate(ev.event_date)}</p>
+          </div>
+          <div style="text-align:right;font-size:13px;color:var(--gray);">${ev.tasks.length} task(s)</div>
+        </div>
+        <div style="border-top:1px solid var(--border);padding-top:14px;">
+          ${ev.tasks.map(t => `
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);">
+              <span style="font-size:13px;font-weight:500;">${t.title}</span>
+              ${formatTaskStatus(t.status)}
+            </div>`).join('')}
+        </div>
+      </div>`).join('') :
+      `<div class="empty-state"><div class="empty-state-icon">📋</div><p class="empty-state-text">No events assigned yet</p></div>`;
+}
+
+function formatTaskStatus(status) {
+    const map = {
+        pending:     '<span class="badge badge-pending">Pending</span>',
+        in_progress: '<span class="badge badge-ongoing">In Progress</span>',
+        completed:   '<span class="badge badge-completed">Completed</span>',
+    };
+    return map[status] || `<span class="badge">${status}</span>`;
+}
+
+function openTaskUpdate(task) {
+    document.getElementById('tu-id').value = task.id;
+    document.getElementById('tu-title').textContent = task.title;
+    document.getElementById('tu-desc').textContent = task.description || 'No description';
+    document.getElementById('tu-status').value = task.status;
+    openModal('task-update-modal');
+}
+
+async function updateTaskStatus() {
+    const data = { id: document.getElementById('tu-id').value, status: document.getElementById('tu-status').value };
+    const res = await API.post('tasks.php?action=update', data);
+    if (res.success) {
+        showToast('Task status updated!', 'success');
+        closeModal('task-update-modal');
+        loadDashboard();
+    } else {
+        showToast('Update failed', 'error');
+    }
+}
+</script>
+</body>
+</html>

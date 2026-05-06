@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Dashboard - EventPro</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="navbar">
+  <div style="display:flex;align-items:center;gap:12px;">
+    <button id="sidebar-toggle" style="background:none;border:none;cursor:pointer;padding:4px;">
+      <svg width="22" height="22" fill="none" stroke="var(--gray)" stroke-width="2" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+    </button>
+    <a class="navbar-brand text-[#ffa115] " href="">
+     PLANPro
+    </a>
+  </div>
+  <div class="nav-user">
+    <span id="nav-username" style="font-size:14px;font-weight:600;color:var(--gray);"></span>
+    <div class="avatar" id="nav-avatar">A</div>
+    <a href="../php/logout.php" class="btn btn-outline btn-sm">Logout</a>
+  </div>
+</nav>
+
+<!-- Sidebar -->
+<aside class="sidebar">
+  <div class="sidebar-section">
+    <div class="sidebar-title">Main</div>
+    <a class="sidebar-link active" onclick="showSection('dashboard')"> Dashboard</a>
+    <a class="sidebar-link" onclick="showSection('bookings')"> Bookings</a>
+    <a class="sidebar-link" onclick="showSection('packages')"> Packages</a>
+    <a class="sidebar-link" onclick="showSection('payments')"> Payments</a>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-title">Management</div>
+    <a class="sidebar-link" onclick="showSection('users')"> Customers</a>
+    <a class="sidebar-link" onclick="showSection('managers')"> Managers</a>
+    <a class="sidebar-link" onclick="showSection('staff')"> Staff</a>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-title">Reports</div>
+    <a class="sidebar-link" onclick="showSection('reports')">Reports</a>
+    <a class="sidebar-link" onclick="showSection('feedback')"> Feedback</a>
+  </div>
+
+  <div class="sidebar-section">
+    <a class="sidebar-link" href="https://build-me-app--hridoymondol74.replit.app/" target="_blank">Create Your Image With AI</a>
+  </div>
+
+  <div class="sidebar-section">
+    <a href="../php/logout.php" class="sidebar-link" style="color:var(--danger)"> Logout</a>
+  </div>
+</aside>
+
+<!-- Main Content -->
+<main class="main-content">
+
+  <!-- Dashboard -->
+  <div id="section-dashboard">
+    <div class="page-header">
+      <h1 class="page-title">Admin Dashboard</h1>
+      <p class="page-subtitle">Overview of your event management system</p>
+    </div>
+    <div class="grid-stats" id="stats-grid">
+      <div class="spinner"></div>
+    </div>
+    <!-- Recent Bookings -->
+    <div class="card" style="padding:24px;margin-top:8px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+        <h3 style="font-size:17px;font-weight:700;">Recent Bookings</h3>
+        <button class="btn btn-outline btn-sm" onclick="showSection('bookings')">View All</button>
+      </div>
+      <div class="table-wrapper"><table id="recent-table">
+        <thead><tr><th>#</th><th>Customer</th><th>Package</th><th>Event Date</th><th>Amount</th><th>Status</th></tr></thead>
+        <tbody id="recent-tbody"><tr><td colspan="6" style="text-align:center;padding:30px;"><div class="spinner"></div></td></tr></tbody>
+      </table></div>
+    </div>
+  </div>
+
+  <!-- Bookings -->
+  <div id="section-bookings" style="display:none;">
+    <div class="page-header" style="display:flex;justify-content:space-between;align-items:center;">
+      <div><h1 class="page-title">All Bookings</h1><p class="page-subtitle">Manage event bookings</p></div>
+      <input type="text" class="form-control" id="booking-search" placeholder="Search..." style="width:240px;">
+    </div>
+    <div class="card" style="padding:24px;">
+      <div class="table-wrapper"><table id="bookings-table">
+        <thead><tr><th>#ID</th><th>Customer</th><th>Package</th><th>Event Date</th><th>Manager</th><th>Amount</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody id="bookings-tbody"><tr><td colspan="8" style="text-align:center;padding:30px;"><div class="spinner"></div></td></tr></tbody>
+      </table></div>
+    </div>
+  </div>
+
+  <!-- Packages -->
+  <div id="section-packages" style="display:none;">
+    <div class="page-header" style="display:flex;justify-content:space-between;align-items:center;">
+      <div><h1 class="page-title">Event Packages</h1><p class="page-subtitle">Manage your service packages</p></div>
+      <button class="btn btn-primary" onclick="openPackageModal()">+ Add Package</button>
+    </div>
+    <div class="grid-cards" id="packages-grid"><div class="spinner"></div></div>
+  </div>
+
+  <!-- Payments -->
+  <div id="section-payments" style="display:none;">
+    <div class="page-header"><h1 class="page-title">Payments</h1><p class="page-subtitle">Payment records & revenue</p></div>
+    <div class="card" style="padding:24px;">
+      <div class="table-wrapper"><table>
+        <thead><tr><th>#</th><th>Customer</th><th>Package</th><th>Amount</th><th>Method</th><th>Status</th><th>Date</th></tr></thead>
+        <tbody id="payments-tbody"><tr><td colspan="7" style="text-align:center;padding:30px;"><div class="spinner"></div></td></tr></tbody>
+      </table></div>
+    </div>
+  </div>
+
+  <!-- Users -->
+  <div id="section-users" style="display:none;">
+    <div class="page-header" style="display:flex;justify-content:space-between;align-items:center;">
+      <div><h1 class="page-title">Customers</h1></div>
+      <button class="btn btn-primary" onclick="openUserModal('customer')">+ Add Customer</button>
+    </div>
+    <div class="card" style="padding:24px;">
+      <div class="table-wrapper"><table>
+        <thead><tr><th>#</th><th>Name</th><th>Email</th><th>Phone</th><th>Status</th><th>Joined</th><th>Actions</th></tr></thead>
+        <tbody id="users-tbody"><tr><td colspan="7" style="text-align:center;padding:30px;"><div class="spinner"></div></td></tr></tbody>
+      </table></div>
+    </div>
+  </div>
+
+  <!-- Managers -->
+  <div id="section-managers" style="display:none;">
+    <div class="page-header" style="display:flex;justify-content:space-between;align-items:center;">
+      <div><h1 class="page-title">Event Managers</h1></div>
+      <button class="btn btn-primary" onclick="openUserModal('manager')">+ Add Manager</button>
+    </div>
+    <div class="card" style="padding:24px;">
+      <div class="table-wrapper"><table>
+        <thead><tr><th>#</th><th>Name</th><th>Email</th><th>Phone</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody id="managers-tbody"><tr><td colspan="6" style="text-align:center;padding:30px;"><div class="spinner"></div></td></tr></tbody>
+      </table></div>
+    </div>
+  </div>
+
+  <!-- Staff -->
+  <div id="section-staff" style="display:none;">
+    <div class="page-header" style="display:flex;justify-content:space-between;align-items:center;">
+      <div><h1 class="page-title">Staff / Service Providers</h1></div>
+      <button class="btn btn-primary" onclick="openUserModal('staff')">+ Add Staff</button>
+    </div>
+    <div class="card" style="padding:24px;">
+      <div class="table-wrapper"><table>
+        <thead><tr><th>#</th><th>Name</th><th>Email</th><th>Phone</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody id="staff-tbody"><tr><td colspan="6" style="text-align:center;padding:30px;"><div class="spinner"></div></td></tr></tbody>
+      </table></div>
+    </div>
+  </div>
+
+  <!-- Reports -->
+  <div id="section-reports" style="display:none;">
+    <div class="page-header"><h1 class="page-title">Reports</h1><p class="page-subtitle">System analytics & insights</p></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+      <div class="card" style="padding:24px;">
+        <h3 style="margin-bottom:16px;font-weight:700;">Bookings by Status</h3>
+        <div id="booking-status-chart"></div>
+      </div>
+      <div class="card" style="padding:24px;">
+        <h3 style="margin-bottom:16px;font-weight:700;">Revenue by Month</h3>
+        <div id="revenue-chart"></div>
+      </div>
+    </div>
+    <div class="card" style="padding:24px;margin-top:20px;">
+      <h3 style="margin-bottom:16px;font-weight:700;">All Bookings Report</h3>
+      <div class="table-wrapper"><table>
+        <thead><tr><th>#</th><th>Customer</th><th>Package</th><th>Event Date</th><th>Status</th><th>Amount</th></tr></thead>
+        <tbody id="report-tbody"></tbody>
+      </table></div>
+    </div>
+  </div>
+
+  <!-- Feedback -->
+  <div id="section-feedback" style="display:none;">
+    <div class="page-header"><h1 class="page-title">Customer Feedback</h1></div>
+    <div class="grid-cards" id="feedback-grid"><div class="spinner"></div></div>
+  </div>
+
+</main>
+
+<!-- Booking Update Modal -->
+<div class="modal-overlay" id="booking-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 class="modal-title">Update Booking</h2>
+      <button class="modal-close" onclick="closeModal('booking-modal')">✕</button>
+    </div>
+    <input type="hidden" id="bk-id">
+    <div class="form-group">
+      <label class="form-label">Status</label>
+      <select id="bk-status" class="form-control">
+        <option value="pending">Pending</option>
+        <option value="approved">Approved</option>
+        <option value="ongoing">Ongoing</option>
+        <option value="completed">Completed</option>
+        <option value="cancelled">Cancelled</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Assign Manager</label>
+      <select id="bk-manager" class="form-control"><option value="">Select Manager</option></select>
+    </div>
+    <button class="btn btn-primary" style="width:100%;" onclick="updateBooking()">Update Booking</button>
+  </div>
+</div>
+
+<!-- Package Modal -->
+<div class="modal-overlay" id="package-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 class="modal-title" id="pkg-modal-title">Add Package</h2>
+      <button class="modal-close" onclick="closeModal('package-modal')">✕</button>
+    </div>
+    <input type="hidden" id="pkg-id">
+    <div class="form-group">
+      <label class="form-label">Package Name</label>
+      <input type="text" id="pkg-name" class="form-control" placeholder="e.g. Royal Wedding Package">
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <div class="form-group">
+        <label class="form-label">Category</label>
+        <select id="pkg-category" class="form-control">
+          <option value="wedding">Wedding</option>
+          <option value="birthday">Birthday</option>
+          <option value="conference">Conference</option>
+          <option value="corporate">Corporate</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Capacity</label>
+        <input type="number" id="pkg-capacity" class="form-control" placeholder="100">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Venue</label>
+      <input type="text" id="pkg-venue" class="form-control" placeholder="Venue name & location">
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <div class="form-group">
+        <label class="form-label">Price (BDT)</label>
+        <input type="number" id="pkg-price" class="form-control" placeholder="50000">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Discount (%)</label>
+        <input type="number" id="pkg-discount" class="form-control" placeholder="0">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Description</label>
+      <textarea id="pkg-description" class="form-control" placeholder="Describe the package..."></textarea>
+    </div>
+    <button class="btn btn-primary" style="width:100%;" onclick="savePackage()">Save Package</button>
+  </div>
+</div>
+
+<!-- User Modal -->
+<div class="modal-overlay" id="user-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 class="modal-title" id="user-modal-title">Add User</h2>
+      <button class="modal-close" onclick="closeModal('user-modal')">✕</button>
+    </div>
+    <input type="hidden" id="u-id">
+    <input type="hidden" id="u-role">
+    <div class="form-group">
+      <label class="form-label">Full Name</label>
+      <input type="text" id="u-name" class="form-control">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Email</label>
+      <input type="email" id="u-email" class="form-control">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Phone</label>
+      <input type="tel" id="u-phone" class="form-control">
+    </div>
+    <div class="form-group" id="u-pass-group">
+      <label class="form-label">Password</label>
+      <input type="password" id="u-password" class="form-control" placeholder="Min. 6 characters">
+    </div>
+    <button class="btn btn-primary" style="width:100%;" onclick="saveUser()">Save User</button>
+  </div>
+</div>
+
+<script src="../js/main.js"></script>
+<script>
+let currentSection = 'dashboard';
+let managersData = [];
+
+// Init
+(async () => {
+    const user = await checkAuth('admin');
+    document.getElementById('nav-username').textContent = user.name;
+    document.getElementById('nav-avatar').textContent = user.name[0].toUpperCase();
+    loadDashboard();
+    loadManagers();
+})();
+
+function showSection(name) {
+    document.querySelectorAll('[id^="section-"]').forEach(s => s.style.display = 'none');
+    document.getElementById('section-' + name).style.display = 'block';
+    document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
+    event?.target?.closest('.sidebar-link')?.classList.add('active');
+    currentSection = name;
+
+    const loaders = {
+        bookings: loadBookings,
+        packages: loadAdminPackages,
+        payments: loadPayments,
+        users: () => loadUserTable('customer', 'users-tbody'),
+        managers: () => loadUserTable('manager', 'managers-tbody'),
+        staff: () => loadUserTable('staff', 'staff-tbody'),
+        reports: loadReports,
+        feedback: loadFeedback
+    };
+    loaders[name]?.();
+}
+
+async function loadDashboard() {
+    const res = await API.get('reports.php', { action: 'summary' });
+    const d = res.data;
+    document.getElementById('stats-grid').innerHTML = `
+      <div class="stat-card"><div class="stat-icon" style="background:#EFF6FF;"><span style="font-size:22px;">👥</span></div><div class="stat-value">${d.total_users}</div><div class="stat-label">Total Customers</div></div>
+      <div class="stat-card"><div class="stat-icon" style="background:#D1FAE5;"><span style="font-size:22px;">📋</span></div><div class="stat-value">${d.total_bookings}</div><div class="stat-label">Total Bookings</div></div>
+      <div class="stat-card"><div class="stat-icon" style="background:#FEF3C7;"><span style="font-size:22px;">⏳</span></div><div class="stat-value">${d.pending}</div><div class="stat-label">Pending</div></div>
+      <div class="stat-card"><div class="stat-icon" style="background:#D1FAE5;"><span style="font-size:22px;">✅</span></div><div class="stat-value">${d.completed}</div><div class="stat-label">Completed</div></div>
+      <div class="stat-card"><div class="stat-icon" style="background:#DBEAFE;"><span style="font-size:22px;">💰</span></div><div class="stat-value" style="font-size:20px;">${formatCurrency(d.total_revenue)}</div><div class="stat-label">Total Revenue</div></div>
+      <div class="stat-card"><div class="stat-icon" style="background:#FEF3C7;"><span style="font-size:22px;">⭐</span></div><div class="stat-value">${d.avg_rating || 'N/A'}</div><div class="stat-label">Avg Rating</div></div>
+    `;
+    // Recent bookings
+    const bk = await API.get('reports.php', { action: 'bookings' });
+    const tbody = document.getElementById('recent-tbody');
+    tbody.innerHTML = bk.data.slice(0,8).map((b,i) => `
+      <tr><td>${b.id}</td><td>${b.customer}</td><td>${b.package}</td><td>${formatDate(b.event_date)}</td><td>${formatCurrency(b.total_amount)}</td><td>${formatStatus(b.status)}</td></tr>
+    `).join('') || '<tr><td colspan="6" style="text-align:center;">No bookings yet</td></tr>';
+}
+
+async function loadBookings() {
+    const res = await API.get('bookings.php', { action: 'list' });
+    const tbody = document.getElementById('bookings-tbody');
+    tbody.innerHTML = res.data.map(b => `
+      <tr>
+        <td>#${b.id}</td><td>${b.customer_name}</td><td>${b.package_name}</td>
+        <td>${formatDate(b.event_date)}</td>
+        <td>${b.manager_name || '<em style="color:var(--gray)">Unassigned</em>'}</td>
+        <td>${formatCurrency(b.total_amount)}</td>
+        <td>${formatStatus(b.status)}</td>
+        <td><button class="btn btn-sm btn-outline" onclick="editBooking(${JSON.stringify(b).replace(/"/g,'&quot;')})">Edit</button></td>
+      </tr>`).join('') || '<tr><td colspan="8" style="text-align:center;">No bookings found</td></tr>';
+    initTableSearch('booking-search', 'bookings-table');
+}
+
+async function loadAdminPackages() {
+    const res = await API.get('packages.php', { action: 'list' });
+    const grid = document.getElementById('packages-grid');
+    
+
+    const pkgImages = {
+      wedding: '../images/p-2.jpg',
+      birthday: '../images/p-1.jpg',
+      conference: '../images/p-3.jpg',
+      corporate: '../images/p-4.jpg',
+      other: '../images/p-5.jpg'
+    };
+
+    grid.innerHTML = res.data.map(p => `
+      <div class="package-card">
+        <div class="package-img">  <img src="${pkgImages[p.category] || '../images/p-5.jpg'}" 
+       class="w-full h-full object-cover rounded" ></div>
+
+
+        <div class="package-body">
+          <h3 style="font-size:16px;margin-bottom:6px;">${p.name}</h3>
+          <p style="color:var(--gray);font-size:13px;margin-bottom:10px;">${p.venue}</p>
+          <div class="package-price">${formatCurrency(p.price*(1-p.discount/100))}</div>
+          <p style="color:var(--gray);font-size:12px;margin-bottom:14px;">${p.discount>0?`${p.discount}% off`:'No discount'}</p>
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn-sm btn-outline" onclick="editPackage(${JSON.stringify(p).replace(/"/g,'&quot;')})">Edit</button>
+            <button class="btn btn-sm btn-danger" onclick="deletePackage(${p.id})">Delete</button>
+          </div>
+        </div>
+      </div>`).join('') || '<div style="color:var(--gray);text-align:center;padding:40px;">No packages found</div>';
+}
+
+async function loadPayments() {
+    const res = await API.get('payments.php', { action: 'list' });
+    document.getElementById('payments-tbody').innerHTML = res.data.map(p => `
+      <tr><td>#${p.id}</td><td>${p.customer_name}</td><td>${p.package_name}</td><td>${formatCurrency(p.amount)}</td>
+      <td>${p.method||'-'}</td><td>${formatStatus(p.status)}</td><td>${formatDate(p.paid_at||p.created_at)}</td></tr>`).join('') ||
+      '<tr><td colspan="7" style="text-align:center;">No payments found</td></tr>';
+}
+
+async function loadUserTable(role, tbodyId) {
+    const res = await API.get('users.php', { action: 'list', role });
+    document.getElementById(tbodyId).innerHTML = res.data.map((u,i) => `
+      <tr><td>${i+1}</td><td>${u.name}</td><td>${u.email}</td><td>${u.phone||'-'}</td><td>${formatStatus(u.status)}</td>
+      <td>${formatDate(u.created_at)}</td>
+      <td><button class="btn btn-sm btn-danger" onclick="deleteUser(${u.id})">Remove</button></td></tr>`).join('') ||
+      `<tr><td colspan="7" style="text-align:center;">No ${role}s found</td></tr>`;
+}
+
+async function loadManagers() {
+    const res = await API.get('users.php', { action: 'list', role: 'manager' });
+    managersData = res.data;
+    const sel = document.getElementById('bk-manager');
+    sel.innerHTML = '<option value="">Select Manager</option>' + managersData.map(m => `<option value="${m.id}">${m.name}</option>`).join('');
+}
+
+async function loadReports() {
+    const res = await API.get('reports.php', { action: 'bookings' });
+    document.getElementById('report-tbody').innerHTML = res.data.map((b,i) => `
+      <tr><td>${i+1}</td><td>${b.customer}</td><td>${b.package}</td><td>${formatDate(b.event_date)}</td><td>${formatStatus(b.status)}</td><td>${formatCurrency(b.total_amount)}</td></tr>`).join('');
+    // Revenue chart
+    const rev = await API.get('reports.php', { action: 'revenue' });
+    if (rev.data?.length) {
+        document.getElementById('revenue-chart').innerHTML = rev.data.slice(0,6).map(r => `
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+            <span style="font-size:12px;color:var(--gray);width:70px;">${r.month}</span>
+            <div style="flex:1;background:var(--border);border-radius:4px;height:20px;">
+              <div style="background:var(--primary);height:100%;border-radius:4px;width:${Math.min(100,(r.revenue/Math.max(...rev.data.map(x=>x.revenue)))*100)}%"></div>
+            </div>
+            <span style="font-size:12px;font-weight:600;">${formatCurrency(r.revenue)}</span>
+          </div>`).join('');
+    } else {
+        document.getElementById('revenue-chart').innerHTML = '<p style="color:var(--gray);text-align:center;padding:20px;">No revenue data yet</p>';
+    }
+}
+
+async function loadFeedback() {
+    const res = await API.get('feedback.php', { action: 'list' });
+    document.getElementById('feedback-grid').innerHTML = res.data.length ? res.data.map(f => `
+      <div class="card" style="padding:20px;">
+        <div style="display:flex;justify-content:space-between;margin-bottom:10px;">
+          <strong>${f.customer_name}</strong>
+          <span class="stars">${renderStars(f.rating)}</span>
+        </div>
+        <p style="color:var(--gray);font-size:13px;">${f.comment||'No comment'}</p>
+        <p style="font-size:12px;color:var(--gray);margin-top:10px;">📦 ${f.package_name} · ${formatDate(f.created_at)}</p>
+      </div>`).join('') : '<div class="empty-state"><div class="empty-state-icon">⭐</div><p class="empty-state-text">No feedback yet</p></div>';
+}
+
+function editBooking(b) {
+    document.getElementById('bk-id').value = b.id;
+    document.getElementById('bk-status').value = b.status;
+    document.getElementById('bk-manager').value = b.manager_id || '';
+    openModal('booking-modal');
+}
+
+async function updateBooking() {
+    const data = { id: document.getElementById('bk-id').value, status: document.getElementById('bk-status').value, manager_id: document.getElementById('bk-manager').value };
+    const res = await API.post('bookings.php?action=update', data);
+    if (res.success) { showToast('Booking updated!', 'success'); closeModal('booking-modal'); loadBookings(); }
+    else showToast('Update failed', 'error');
+}
+
+function openPackageModal(pkg = null) {
+    document.getElementById('pkg-modal-title').textContent = pkg ? 'Edit Package' : 'Add Package';
+    ['id','name','category','capacity','venue','price','discount','description'].forEach(f => {
+        const el = document.getElementById('pkg-' + f);
+        if (el) el.value = pkg?.[f] || '';
+    });
+    openModal('package-modal');
+}
+
+function editPackage(p) { openPackageModal(p); }
+
+async function savePackage() {
+    const data = { id: document.getElementById('pkg-id').value, name: document.getElementById('pkg-name').value, category: document.getElementById('pkg-category').value, capacity: document.getElementById('pkg-capacity').value, venue: document.getElementById('pkg-venue').value, price: document.getElementById('pkg-price').value, discount: document.getElementById('pkg-discount').value, description: document.getElementById('pkg-description').value, status: 'active' };
+    const action = data.id ? 'update' : 'create';
+    const res = await API.post('packages.php?action=' + action, data);
+    if (res.success) { showToast('Package saved!', 'success'); closeModal('package-modal'); loadAdminPackages(); }
+    else showToast('Failed to save', 'error');
+}
+
+async function deletePackage(id) {
+    if (!confirmAction('Delete this package?')) return;
+    const res = await fetch('../php/packages.php?action=delete&id=' + id);
+    const data = await res.json();
+    if (data.success) { showToast('Package removed', 'success'); loadAdminPackages(); }
+}
+
+function openUserModal(role) {
+    document.getElementById('u-role').value = role;
+    document.getElementById('u-id').value = '';
+    document.getElementById('u-name').value = '';
+    document.getElementById('u-email').value = '';
+    document.getElementById('u-phone').value = '';
+    document.getElementById('u-password').value = '';
+    document.getElementById('user-modal-title').textContent = `Add ${role.charAt(0).toUpperCase()+role.slice(1)}`;
+    openModal('user-modal');
+}
+
+async function saveUser() {
+    const id = document.getElementById('u-id').value;
+    const data = { id, name: document.getElementById('u-name').value, email: document.getElementById('u-email').value, phone: document.getElementById('u-phone').value, password: document.getElementById('u-password').value, role: document.getElementById('u-role').value, status: 'active' };
+    const action = id ? 'update' : 'create';
+    const res = await API.post('users.php?action=' + action, data);
+    if (res.success) { showToast('User saved!', 'success'); closeModal('user-modal'); const r = document.getElementById('u-role').value; loadUserTable(r, r+'s-tbody'); if(r==='manager') loadManagers(); }
+    else showToast('Failed', 'error');
+}
+
+async function deleteUser(id) {
+    if (!confirmAction('Remove this user?')) return;
+    const res = await fetch('../php/users.php?action=delete&id=' + id);
+    const data = await res.json();
+    if (data.success) { showToast('User removed', 'success'); loadDashboard(); }
+}
+</script>
+</body>
+</html>

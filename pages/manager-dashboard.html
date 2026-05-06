@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Manager Dashboard - EventPro</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+<nav class="navbar">
+  <div style="display:flex;align-items:center;gap:12px;">
+    <button id="sidebar-toggle" style="background:none;border:none;cursor:pointer;padding:4px;">
+      <svg width="22" height="22" fill="none" stroke="var(--gray)" stroke-width="2" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+    </button>
+   <a class="navbar-brand text-[#ffa115] " href="">
+     PLANPro
+    </a>
+  </div>
+  <div class="nav-user">
+    <span id="nav-username" style="font-size:14px;font-weight:600;color:var(--gray);"></span>
+    <div class="avatar" style="background:linear-gradient(135deg,#10B981,#065F46);" id="nav-avatar">M</div>
+    <a href="../php/logout.php" class="btn btn-outline btn-sm">Logout</a>
+  </div>
+</nav>
+
+<aside class="sidebar">
+  <div class="sidebar-section">
+    <div class="sidebar-title">Menu</div>
+    <a class="sidebar-link active" onclick="showSection('dashboard')"> Dashboard</a>
+    <a class="sidebar-link" onclick="showSection('events')"> My Events</a>
+    <a class="sidebar-link" onclick="showSection('tasks')"> Tasks</a>
+    <a class="sidebar-link" onclick="showSection('schedule')">Schedule</a>
+  </div>
+  <div class="sidebar-section">
+    <a href="../php/logout.php" class="sidebar-link" style="color:var(--danger)">Logout</a>
+  </div>
+</aside>
+
+<main class="main-content">
+
+  <!-- Dashboard -->
+  <div id="section-dashboard">
+    <div class="page-header">
+      <h1 class="page-title">Manager Dashboard</h1>
+      <p class="page-subtitle">Manage and coordinate your assigned events</p>
+    </div>
+    <div class="grid-stats" id="mgr-stats">
+      <div class="stat-card"><div class="stat-icon" style="background:#EFF6FF;">📋</div><div class="stat-value" id="s-total">-</div><div class="stat-label">Assigned Events</div></div>
+      <div class="stat-card"><div class="stat-icon" style="background:#DBEAFE;">🔄</div><div class="stat-value" id="s-ongoing">-</div><div class="stat-label">Ongoing</div></div>
+      <div class="stat-card"><div class="stat-icon" style="background:#D1FAE5;">✅</div><div class="stat-value" id="s-done">-</div><div class="stat-label">Completed</div></div>
+      <div class="stat-card"><div class="stat-icon" style="background:#FEF3C7;">⏳</div><div class="stat-value" id="s-pending">-</div><div class="stat-label">Pending</div></div>
+    </div>
+    <!-- Upcoming Events -->
+    <div class="card" style="padding:24px;">
+      <h3 style="margin-bottom:16px;font-weight:700;">Upcoming Events</h3>
+      <div id="upcoming-events"><div class="spinner"></div></div>
+    </div>
+  </div>
+
+  <!-- Events -->
+  <div id="section-events" style="display:none;">
+    <div class="page-header"><h1 class="page-title">My Assigned Events</h1></div>
+    <div class="card" style="padding:24px;">
+      <div class="table-wrapper"><table>
+        <thead><tr><th>#</th><th>Customer</th><th>Package</th><th>Event Date</th><th>Guests</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody id="events-tbody"><tr><td colspan="7" style="text-align:center;"><div class="spinner"></div></td></tr></tbody>
+      </table></div>
+    </div>
+  </div>
+
+  <!-- Tasks -->
+  <div id="section-tasks" style="display:none;">
+    <div class="page-header" style="display:flex;justify-content:space-between;align-items:center;">
+      <div><h1 class="page-title">Event Tasks</h1><p class="page-subtitle">Assign and track staff tasks</p></div>
+      <button class="btn btn-primary" onclick="openModal('task-modal')">+ Assign Task</button>
+    </div>
+    <div class="card" style="padding:24px;">
+      <div class="table-wrapper"><table>
+        <thead><tr><th>#</th><th>Event</th><th>Staff</th><th>Task</th><th>Service</th><th>Due</th><th>Status</th></tr></thead>
+        <tbody id="tasks-tbody"><tr><td colspan="7" style="text-align:center;"><div class="spinner"></div></td></tr></tbody>
+      </table></div>
+    </div>
+  </div>
+
+  <!-- Schedule -->
+  <div id="section-schedule" style="display:none;">
+    <div class="page-header"><h1 class="page-title">Event Schedule</h1></div>
+    <div id="schedule-list" class="grid-cards"><div class="spinner"></div></div>
+  </div>
+
+</main>
+
+<!-- Event Status Modal -->
+<div class="modal-overlay" id="event-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 class="modal-title">Update Event Status</h2>
+      <button class="modal-close" onclick="closeModal('event-modal')">✕</button>
+    </div>
+    <input type="hidden" id="ev-id">
+    <div style="background:var(--bg);border-radius:10px;padding:14px;margin-bottom:16px;">
+      <h3 id="ev-name" style="font-size:15px;font-weight:700;"></h3>
+      <p id="ev-customer" style="font-size:13px;color:var(--gray);margin-top:4px;"></p>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Update Status</label>
+      <select id="ev-status" class="form-control">
+        <option value="approved">Approved</option>
+        <option value="ongoing">Ongoing</option>
+        <option value="completed">Completed</option>
+        <option value="cancelled">Cancelled</option>
+      </select>
+    </div>
+    <button class="btn btn-primary" style="width:100%;" onclick="updateEventStatus()">Update Status</button>
+  </div>
+</div>
+
+<!-- Assign Task Modal -->
+<div class="modal-overlay" id="task-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 class="modal-title">Assign Task to Staff</h2>
+      <button class="modal-close" onclick="closeModal('task-modal')">✕</button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Event / Booking</label>
+      <select id="task-booking" class="form-control"><option value="">Select event</option></select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Staff Member</label>
+      <select id="task-staff" class="form-control"><option value="">Select staff</option></select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Task Title</label>
+      <input type="text" id="task-title" class="form-control" placeholder="e.g. Set up decoration">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Service Type</label>
+      <select id="task-service" class="form-control">
+        <option value="catering">Catering</option>
+        <option value="decoration">Decoration</option>
+        <option value="venue_setup">Venue Setup</option>
+        <option value="photography">Photography</option>
+        <option value="music">Music</option>
+        <option value="other">Other</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Description</label>
+      <textarea id="task-desc" class="form-control"></textarea>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Due Date</label>
+      <input type="date" id="task-due" class="form-control">
+    </div>
+    <button class="btn btn-primary" style="width:100%;" onclick="assignTask()">Assign Task</button>
+  </div>
+</div>
+
+<script src="../js/main.js"></script>
+<script>
+let eventsData = [];
+
+(async () => {
+    const user = await checkAuth('manager');
+    document.getElementById('nav-username').textContent = user.name;
+    document.getElementById('nav-avatar').textContent = user.name[0].toUpperCase();
+    loadDashboard();
+    loadStaffList();
+})();
+
+function showSection(name) {
+    document.querySelectorAll('[id^="section-"]').forEach(s => s.style.display = 'none');
+    document.getElementById('section-' + name).style.display = 'block';
+    document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
+    const loaders = { events: loadEventsTable, tasks: loadTasks, schedule: loadSchedule };
+    loaders[name]?.();
+}
+
+async function loadDashboard() {
+    const res = await API.get('bookings.php', { action: 'list' });
+    eventsData = res.data;
+    document.getElementById('s-total').textContent = res.data.length;
+    document.getElementById('s-ongoing').textContent = res.data.filter(b => b.status==='ongoing').length;
+    document.getElementById('s-done').textContent = res.data.filter(b => b.status==='completed').length;
+    document.getElementById('s-pending').textContent = res.data.filter(b => b.status==='approved').length;
+
+    // Upcoming events
+    const upcoming = res.data.filter(b => ['approved','ongoing'].includes(b.status)).sort((a,b) => new Date(a.event_date)-new Date(b.event_date));
+    const sel = document.getElementById('task-booking');
+    sel.innerHTML = '<option value="">Select event</option>' + upcoming.map(b => `<option value="${b.id}">#${b.id} - ${b.package_name} (${formatDate(b.event_date)})</option>`).join('');
+
+    document.getElementById('upcoming-events').innerHTML = upcoming.length ? upcoming.slice(0,4).map(b => `
+      <div style="border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;">
+        <div>
+          <h4 style="font-weight:700;margin-bottom:4px;">${b.package_name}</h4>
+          <p style="font-size:13px;color:var(--gray);">👤 ${b.customer_name} · 📅 ${formatDate(b.event_date)} · 👥 ${b.guest_count} guests</p>
+        </div>
+        <div style="text-align:right;">
+          ${formatStatus(b.status)}
+          <br><button class="btn btn-sm btn-outline" style="margin-top:8px;" onclick="openEventModal(${JSON.stringify(b).replace(/"/g,'&quot;')})">Update</button>
+        </div>
+      </div>`).join('') : '<div class="empty-state"><div class="empty-state-icon">📅</div><p class="empty-state-text">No upcoming events</p></div>';
+}
+
+async function loadEventsTable() {
+    const res = await API.get('bookings.php', { action: 'list' });
+    document.getElementById('events-tbody').innerHTML = res.data.map(b => `
+      <tr><td>#${b.id}</td><td>${b.customer_name}</td><td>${b.package_name}</td><td>${formatDate(b.event_date)}</td><td>${b.guest_count}</td><td>${formatStatus(b.status)}</td>
+      <td><button class="btn btn-sm btn-outline" onclick="openEventModal(${JSON.stringify(b).replace(/"/g,'&quot;')})">Update</button></td></tr>`).join('') ||
+      '<tr><td colspan="7" style="text-align:center;">No events assigned</td></tr>';
+}
+
+function openEventModal(b) {
+    document.getElementById('ev-id').value = b.id;
+    document.getElementById('ev-name').textContent = b.package_name;
+    document.getElementById('ev-customer').textContent = `Customer: ${b.customer_name} | Date: ${formatDate(b.event_date)}`;
+    document.getElementById('ev-status').value = b.status;
+    openModal('event-modal');
+}
+
+async function updateEventStatus() {
+    const data = { id: document.getElementById('ev-id').value, status: document.getElementById('ev-status').value };
+    const res = await API.post('bookings.php?action=update', data);
+    if (res.success) { showToast('Status updated!', 'success'); closeModal('event-modal'); loadDashboard(); }
+    else showToast('Update failed', 'error');
+}
+
+async function loadStaffList() {
+    const res = await API.get('users.php', { action: 'list', role: 'staff' });
+    const sel = document.getElementById('task-staff');
+    sel.innerHTML = '<option value="">Select staff</option>' + res.data.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+}
+
+async function loadTasks() {
+    const res = await API.get('tasks.php', { action: 'list' });
+    const statusColors = { pending:'badge-pending', in_progress:'badge-ongoing', completed:'badge-approved' };
+    document.getElementById('tasks-tbody').innerHTML = res.data.map(t => `
+      <tr><td>#${t.id}</td><td>${t.package_name}</td><td>${t.staff_name}</td><td>${t.title}</td><td style="text-transform:capitalize;">${t.service_type?.replace('_',' ')}</td><td>${formatDate(t.due_date)}</td><td><span class="badge ${statusColors[t.status]||''}">${t.status?.replace('_',' ')}</span></td></tr>`).join('') ||
+      '<tr><td colspan="7" style="text-align:center;">No tasks yet</td></tr>';
+}
+
+async function assignTask() {
+    const data = { booking_id: document.getElementById('task-booking').value, staff_id: document.getElementById('task-staff').value, title: document.getElementById('task-title').value, description: document.getElementById('task-desc').value, service_type: document.getElementById('task-service').value, due_date: document.getElementById('task-due').value };
+    if (!data.booking_id || !data.staff_id || !data.title) { showToast('Fill required fields', 'error'); return; }
+    const res = await API.post('tasks.php?action=create', data);
+    if (res.success) { showToast('Task assigned!', 'success'); closeModal('task-modal'); loadTasks(); }
+    else showToast('Failed to assign task', 'error');
+}
+
+async function loadSchedule() {
+    const res = await API.get('bookings.php', { action: 'list' });
+    const emojis = {wedding:'💍',birthday:'🎂',conference:'🎤',corporate:'🏢',other:'🎉'};
+    document.getElementById('schedule-list').innerHTML = res.data.map(b => `
+      <div class="card" style="padding:20px;">
+        <div style="display:flex;gap:16px;align-items:center;margin-bottom:12px;">
+          <div style="font-size:32px;">${emojis[b.category]||'🎉'}</div>
+          <div>
+            <h3 style="font-weight:700;">${b.package_name}</h3>
+            <p style="font-size:13px;color:var(--gray);">📅 ${formatDate(b.event_date)} · 👤 ${b.customer_name}</p>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;justify-content:space-between;align-items:center;">
+          ${formatStatus(b.status)}
+          <span style="font-size:13px;color:var(--gray);">👥 ${b.guest_count} guests</span>
+        </div>
+      </div>`).join('') || '<div class="empty-state"><div class="empty-state-icon">📅</div><p class="empty-state-text">No events in schedule</p></div>';
+}
+</script>
+</body>
+</html>
