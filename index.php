@@ -1074,7 +1074,7 @@ document.getElementById('register-form')?.addEventListener('submit', async e => 
     </button>
   </div>
   <div style="text-align:center;font-size:10px;color:#94A3B8;padding:6px 0 8px;background:#F8FAFC;">
-    Powered by Claude AI · PLANPro 2025
+    Powered by PLANPro AI Assistant. Your event planning companion!
   </div>
 </div>
 
